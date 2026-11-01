@@ -44,7 +44,7 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
   const statusHealth: Health = audit.status === 'completed' ? 'normal' : audit.status === 'failed' ? 'critical' : 'degraded'
 
   return (
-    <section aria-label="Audit control room" className="rounded-3xl bg-taupe-900 text-taupe-200 p-4 sm:p-5 space-y-4 ring-1 ring-white/5">
+    <section aria-label="Audit control room" className="rounded-3xl bg-[#0b192c] text-slate-200 border border-navy-800/80 p-4 sm:p-5 space-y-4 ring-1 ring-white/5">
       {/* Status pills */}
       <div className="flex flex-wrap gap-2">
         <Pill label="Site" value={getDomainFromUrl(audit.url)} />
@@ -86,7 +86,7 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
               Alerts
             </h3>
             {alerts.length === 0 ? (
-              <p className="text-xs text-taupe-300 mt-2">No critical or high-severity findings.</p>
+              <p className="text-xs text-slate-300 mt-2">No critical or high-severity findings.</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {alerts.map(f => (
@@ -99,7 +99,7 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
                     >
                       <SeverityBadge severity={f.severity} size="sm" />
                       <span className="block text-sm text-white mt-1 leading-snug">{f.title}</span>
-                      <span className="block text-xs text-taupe-300 mt-0.5">{categoryLabel(f.category)}</span>
+                      <span className="block text-xs text-slate-300 mt-0.5">{categoryLabel(f.category)}</span>
                     </button>
                   </li>
                 ))}
@@ -143,7 +143,7 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
             <div className="col-span-2 sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-2xl bg-taupe-950 border border-white/10 px-5 py-3 text-center shadow-[0_0_40px_rgba(245,165,36,0.25)]">
               <Globe className="w-5 h-5 mx-auto text-glow-degraded" aria-hidden="true" />
               <p className="text-sm font-semibold text-white mt-1 max-w-[160px] mx-auto truncate">{getDomainFromUrl(audit.url)}</p>
-              <p className="text-xs text-taupe-300">{audit.findings.length} findings</p>
+              <p className="text-xs text-slate-300">{audit.findings.length} findings</p>
             </div>
 
             {nodes.map(n => {
@@ -157,7 +157,7 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
                   aria-label={`${categoryLabel(n.category)}: ${n.count} findings, ${HEALTH_LABEL[n.health]}. Filter findings list.`}
                   style={{ left: `${(n.x / 600) * 100}%`, top: `${(n.y / 400) * 100}%` }}
                   className={clsx(
-                    'sm:absolute sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-xl border px-3 py-2 text-left bg-taupe-950 hover:bg-taupe-800 transition-colors',
+                    'sm:absolute sm:-translate-x-1/2 sm:-translate-y-1/2 rounded-xl border px-3 py-2 text-left bg-taupe-950 hover:bg-navy-900 transition-colors',
                     active ? 'border-glow-degraded' : 'border-white/10'
                   )}
                 >
@@ -168,14 +168,14 @@ export default function AuditControlRoom({ audit, activeCategory, onCategory, on
                     />
                     {categoryLabel(n.category)}
                   </span>
-                  <span className="block text-xs text-taupe-300 mt-0.5">{n.count} findings</span>
+                  <span className="block text-xs text-slate-300 mt-0.5">{n.count} findings</span>
                 </button>
               )
             })}
           </div>
 
           {/* Legend */}
-          <ul className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-xs text-taupe-300" aria-label="Status legend">
+          <ul className="flex flex-wrap gap-x-5 gap-y-1 mt-4 text-xs text-slate-300" aria-label="Status legend">
             <LegendItem health="normal" text="Normal: only low or info findings" />
             <LegendItem health="degraded" text="Degraded: medium or high findings" />
             <LegendItem health="critical" text="Critical: at least one critical finding" />
@@ -201,7 +201,7 @@ function Dot({ health }: { health: Health }) {
 function Pill({ label, value, health }: { label: string; value: string; health?: Health }) {
   return (
     <div className="glass rounded-xl px-3 py-1.5">
-      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-taupe-300">
+      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate-300">
         {health && <Dot health={health} />}
         {label}
       </p>
@@ -214,7 +214,7 @@ function Pill({ label, value, health }: { label: string; value: string; health?:
 function Tile({ label, value, health }: { label: string; value: number | string; health?: Health }) {
   return (
     <div className="glass p-3">
-      <p className="flex items-center justify-between gap-2 text-xs text-taupe-300">
+      <p className="flex items-center justify-between gap-2 text-xs text-slate-300">
         {label}
         {health && <Dot health={health} />}
       </p>

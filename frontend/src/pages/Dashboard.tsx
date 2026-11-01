@@ -101,18 +101,18 @@ export default function Dashboard() {
     navigate(a.status === 'completed' ? `/audit/${a.id}/results` : `/audit/${a.id}/progress`)
 
   const sceneFallback = (
-    <div className="h-full flex items-center justify-center text-sm text-taupe-300 px-6 text-center">
+    <div className="h-full flex items-center justify-center text-sm text-slate-300 px-6 text-center">
       3D view isn't available in this browser. Your audits are listed below.
     </div>
   )
 
   return (
-    <div className="min-h-full bg-taupe-950 text-taupe-200">
+    <div className="min-h-full bg-slate-950 text-slate-200">
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         {error && <ErrorAlert message={error} onRetry={fetchAudits} />}
 
         {/* Hero: live 3D city of audited sites */}
-        <section className="relative flex flex-col xl:block overflow-hidden rounded-[28px] bg-[#14110f] border border-white/[0.06] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.8)]" aria-label="Audit city">
+        <section className="relative flex flex-col xl:block overflow-hidden rounded-[28px] bg-[#0b192c] border border-navy-800/80 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.8)]" aria-label="Audit city">
           <div
             className="h-[320px] sm:h-[480px] lg:h-[600px]"
             role="img"
@@ -120,9 +120,9 @@ export default function Dashboard() {
           >
             {/* From xl up the city sits right of the headline instead of behind it */}
             <div className="h-full xl:ml-[340px]">
-              {loading ? <div className="h-full animate-pulse bg-[#17130f]" /> : !webgl ? sceneFallback : (
+              {loading ? <div className="h-full animate-pulse bg-[#0a1628]" /> : !webgl ? sceneFallback : (
                 <SceneBoundary fallback={sceneFallback}>
-                  <Suspense fallback={<div className="h-full animate-pulse bg-[#17130f]" />}>
+                  <Suspense fallback={<div className="h-full animate-pulse bg-[#0a1628]" />}>
                     <CivicCity3D audits={audits} onSelect={openAudit} reducedMotion={reducedMotion} />
                   </Suspense>
                 </SceneBoundary>
@@ -136,30 +136,30 @@ export default function Dashboard() {
 
           {/* Below xl: text sits above the 3D view; xl+: it overlays the scene's left side */}
           <div className="order-first xl:order-none pointer-events-none xl:absolute left-0 top-0 z-30 p-6 sm:p-9 pb-0 xl:pb-9 max-w-xl xl:max-w-[430px] space-y-4">
-            <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-amber-400">
+            <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-civic-sky">
               <span className="relative flex h-2 w-2">
-                {live && <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />}
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                {live && <span className="absolute inline-flex h-full w-full rounded-full bg-civic-sky opacity-75 animate-ping" />}
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-civic-sky" />
               </span>
               {live ? 'Live · audit in progress' : 'Civic command center'}
             </p>
             <h1 className="font-display text-[2rem] sm:text-5xl xl:text-[2.4rem] 2xl:text-[2.85rem] font-medium tracking-[-0.035em] leading-[1.04] text-white [text-wrap:balance]">
-              Every government site, <span className="text-taupe-400">as a city you can walk&nbsp;through.</span>
+              Every government site, <span className="text-slate-400">as a city you can walk&nbsp;through.</span>
             </h1>
-            <p className="text-[15px] leading-relaxed text-taupe-300 max-w-sm">
+            <p className="text-[15px] leading-relaxed text-slate-300 max-w-sm">
               Each tower is an audited website. Taller means easier for citizens to use. Drag to orbit, click a tower to open it.
             </p>
-            <ul className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[11px] text-taupe-300" aria-label="Tower colours">
+            <ul className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[11px] text-slate-300" aria-label="Tower colours">
               <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />80+ good</li>
-              <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />60–79 / running</li>
+              <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-civic-sky shadow-[0_0_8px_#0ea5e9]" />60–79 / running</li>
               <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]" />below 60 / failed</li>
             </ul>
             <div className="pointer-events-auto flex flex-wrap items-center gap-3 pt-1">
-              <Link to="/audit/new" className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-2.5 text-sm font-semibold text-[#14110f] hover:bg-amber-300 transition-colors shadow-[0_0_30px_-6px_rgba(245,158,11,0.6)]">
+              <Link to="/audit/new" className="inline-flex items-center gap-2 rounded-full bg-civic-sky px-5 py-2.5 text-sm font-semibold text-[#14110f] hover:bg-amber-300 transition-colors shadow-[0_0_30px_-6px_rgba(245,158,11,0.6)]">
                 <Plus className="w-4 h-4" />
                 New audit
               </Link>
-              <Link to="/demo" className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white border border-white/15 hover:bg-white/[0.06] transition-colors">
+              <Link to="/demo" className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium text-white border border-navy-700 bg-navy-900/60 hover:bg-navy-800 transition-colors">
                 <FlaskConical className="w-4 h-4" />
                 Demo
               </Link>
@@ -169,7 +169,7 @@ export default function Dashboard() {
             <div className="absolute inset-0 z-30 flex items-center justify-center p-6">
               <div className="glass p-6 max-w-sm text-center space-y-3">
                 <p className="text-white font-medium">The city is empty</p>
-                <p className="text-sm text-taupe-300">Run your first audit and watch its tower rise here.</p>
+                <p className="text-sm text-slate-300">Run your first audit and watch its tower rise here.</p>
                 <Link to="/audit/new" className="btn-primary text-sm justify-center">
                   <Plus className="w-4 h-4" />
                   Start an audit
@@ -180,7 +180,7 @@ export default function Dashboard() {
 
           {/* KPI bar: overlays the scene on large screens, sits under it on small ones */}
           <div className="z-30 p-4 sm:p-6 pt-0 lg:pt-6 lg:absolute lg:inset-x-0 lg:bottom-0 lg:pointer-events-none">
-            <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08]">
+            <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-navy-800 bg-navy-900/60">
               {kpis.map(k => <Kpi key={k.label} {...k} loading={loading} />)}
             </dl>
           </div>
@@ -190,36 +190,36 @@ export default function Dashboard() {
           {/* Score trend */}
           <section className="glass p-5 lg:col-span-3">
             <h2 className="text-sm font-medium text-white">Score trend</h2>
-            <p className="text-xs text-taupe-300 mt-0.5">Last {trend.length || 10} completed audits, oldest to newest</p>
+            <p className="text-xs text-slate-300 mt-0.5">Last {trend.length || 10} completed audits, oldest to newest</p>
             {trend.length === 0 ? (
-              <div className="h-56 flex items-center justify-center text-sm text-taupe-300">No completed audits yet</div>
+              <div className="h-56 flex items-center justify-center text-sm text-slate-300">No completed audits yet</div>
             ) : (
               <div className="h-56 mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trend} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                     <defs>
                       <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f5a524" stopOpacity={0.45} />
-                        <stop offset="100%" stopColor="#f5a524" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.45} />
+                        <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#b8aba1' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} ticks={[0, 50, 100]} tick={{ fontSize: 11, fill: '#b8aba1' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} ticks={[0, 50, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                     <Tooltip
                       formatter={(v: number) => [`${v}/100`, 'Score']}
-                      contentStyle={{ background: '#1a1614', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 12 }}
+                      contentStyle={{ background: '#0b192c', border: '1px solid #1e3a5f', borderRadius: 10, fontSize: 12 }}
                       labelStyle={{ color: '#fff' }}
-                      itemStyle={{ color: '#f5a524' }}
+                      itemStyle={{ color: '#0ea5e9' }}
                     />
                     <Area
                       type="monotone"
                       dataKey="score"
-                      stroke="#f5a524"
+                      stroke="#0ea5e9"
                       strokeWidth={2.5}
                       fill="url(#scoreFill)"
-                      dot={{ r: 3, fill: '#1a1614', stroke: '#f5a524', strokeWidth: 2 }}
-                      activeDot={{ r: 5, fill: '#f5a524' }}
+                      dot={{ r: 3, fill: '#0b192c', stroke: '#0ea5e9', strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: '#0ea5e9' }}
                       isAnimationActive={!reducedMotion}
                       animationDuration={1400}
                     />
@@ -233,10 +233,10 @@ export default function Dashboard() {
           <section className="glass p-5 lg:col-span-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-medium text-white">Activity</h2>
-              <Link to="/history" className="text-xs text-glow-degraded hover:underline">View all</Link>
+              <Link to="/history" className="text-xs text-civic-sky hover:underline">View all</Link>
             </div>
             {audits.length === 0 ? (
-              <p className="text-sm text-taupe-300 mt-6">{loading ? 'Loading…' : 'No audits yet.'}</p>
+              <p className="text-sm text-slate-300 mt-6">{loading ? 'Loading…' : 'No audits yet.'}</p>
             ) : (
               <ul className="mt-3 divide-y divide-white/5">
                 {audits.slice(0, 6).map((a, i) => {
@@ -251,13 +251,13 @@ export default function Dashboard() {
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-sm text-white truncate">{getDomainFromUrl(a.url)}</span>
-                          <span className="block text-xs text-taupe-300 truncate">{truncate(a.task, 60)}</span>
+                          <span className="block text-xs text-slate-300 truncate">{truncate(a.task, 60)}</span>
                         </span>
                         <span className="text-right flex-shrink-0">
                           <span className="block text-sm font-semibold tabular-nums" style={{ color }}>
                             {a.status === 'completed' ? a.overall_score ?? '—' : a.status}
                           </span>
-                          <span className="block text-xs text-taupe-400">{timeAgo(a.created_at)}</span>
+                          <span className="block text-xs text-slate-400">{timeAgo(a.created_at)}</span>
                         </span>
                       </Link>
                     </li>
@@ -277,16 +277,16 @@ interface KpiProps { label: string; value: number; suffix?: string; alert?: bool
 function Kpi({ label, value, suffix, alert, hint, loading }: KpiProps) {
   const shown = useCountUp(loading ? 0 : value)
   return (
-    <div className="bg-[#14110f]/90 backdrop-blur-md px-5 py-4 sm:px-6 sm:py-5">
-      <dt className="font-mono text-[11px] uppercase tracking-[0.16em] text-taupe-400">{label}</dt>
+    <div className="bg-[#0b192c]/90 backdrop-blur-md px-5 py-4 sm:px-6 sm:py-5">
+      <dt className="font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">{label}</dt>
       <dd className="mt-2">
         <span className="flex items-baseline gap-1">
           <span className={`font-display text-4xl sm:text-[2.6rem] font-light leading-none tracking-[-0.04em] tabular-nums ${alert && value > 0 ? 'text-rose-400' : 'text-white'}`}>
             {shown}
           </span>
-          {suffix && <span className="font-mono text-xs text-taupe-400">{suffix}</span>}
+          {suffix && <span className="font-mono text-xs text-slate-400">{suffix}</span>}
         </span>
-        <span className="mt-2 block text-xs text-taupe-400">{hint}</span>
+        <span className="mt-2 block text-xs text-slate-400">{hint}</span>
       </dd>
     </div>
   )

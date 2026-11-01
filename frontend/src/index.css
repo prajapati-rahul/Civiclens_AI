@@ -38,7 +38,7 @@
   }
 
   .glass {
-    @apply rounded-2xl border border-white/10 bg-taupe-800/70 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.35)];
+    @apply rounded-2xl border border-navy-800/80 bg-[#0b192c]/85 backdrop-blur-md shadow-[0_8px_30px_rgba(2,6,23,0.6)];
   }
   
   .badge-critical {

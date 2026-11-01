@@ -102,7 +102,7 @@ export default function AuditResults() {
   const aiMode = audit.metadata?.ai_mode
 
   return (
-    <div className="min-h-full bg-taupe-950 text-taupe-200">
+    <div className="min-h-full bg-slate-950 text-slate-200">
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -111,7 +111,7 @@ export default function AuditResults() {
             <CheckCircle2 className="w-5 h-5 text-glow-normal" />
             Audit Results
           </h1>
-          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-taupe-300">
+          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-slate-300">
             <span className="flex items-center gap-1">
               <Globe className="w-3.5 h-3.5" />
               {getDomainFromUrl(audit.url)}
@@ -132,7 +132,7 @@ export default function AuditResults() {
               </span>
             )}
           </div>
-          <p className="text-sm text-taupe-200 mt-1 italic">"{audit.task}"</p>
+          <p className="text-sm text-slate-200 mt-1 italic">"{audit.task}"</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
@@ -165,7 +165,7 @@ export default function AuditResults() {
       {/* Summary text */}
       {audit.metadata?.summary && (
         <div className="glass p-5 border-l-4 border-l-glow-degraded">
-          <p className="text-sm text-taupe-200 leading-relaxed">{audit.metadata.summary}</p>
+          <p className="text-sm text-slate-200 leading-relaxed">{audit.metadata.summary}</p>
         </div>
       )}
 
@@ -175,7 +175,7 @@ export default function AuditResults() {
             <h2 className="text-sm font-semibold text-white mr-auto">
               Findings
               {filteredFindings.length !== audit.findings.length && (
-                <span className="ml-2 text-xs text-taupe-300">
+                <span className="ml-2 text-xs text-slate-300">
                   ({filteredFindings.length} of {audit.findings.length})
                 </span>
               )}
@@ -186,7 +186,7 @@ export default function AuditResults() {
               <select
                 value={severityFilter}
                 onChange={e => setSeverityFilter(e.target.value as FindingSeverity | 'all')}
-                className="text-xs bg-taupe-900 text-taupe-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
+                className="text-xs bg-taupe-900 text-slate-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
                 aria-label="Filter by severity"
               >
                 <option value="all">All severities</option>
@@ -195,7 +195,7 @@ export default function AuditResults() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value as FindingCategory | 'all')}
-                className="text-xs bg-taupe-900 text-taupe-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
+                className="text-xs bg-taupe-900 text-slate-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
                 aria-label="Filter by category"
               >
                 <option value="all">All categories</option>
@@ -246,7 +246,7 @@ export default function AuditResults() {
                     <p className="text-sm font-medium text-white group-hover:text-glow-degraded transition-colors leading-snug">
                       {finding.title}
                     </p>
-                    <p className="text-xs text-taupe-300 mt-0.5 truncate">
+                    <p className="text-xs text-slate-300 mt-0.5 truncate">
                       {truncate(finding.evidence, 95)}
                     </p>
                   </div>

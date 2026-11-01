@@ -7,8 +7,8 @@ import * as THREE from 'three'
 import type { AuditListItem } from '../types'
 import { getDomainFromUrl, towerColor } from '../utils/helpers'
 
-const AMBER = '#f59e0b'
-const BG = '#14110f'
+const SKY = '#0ea5e9'
+const BG = '#0b192c'
 const SHELL = '#ece6df' // matte off-white, like the server racks in the reference
 const LINE_Y = 0.03
 const FLOOR_H = 0.36
@@ -61,18 +61,18 @@ export default function CivicCity3D({ audits, onSelect, reducedMotion }: Props) 
       <fog attach="fog" args={[BG, 22, 46]} />
 
       <ambientLight intensity={0.25} />
-      <directionalLight position={[6, 12, 8]} intensity={0.8} color="#fff4e6" />
+      <directionalLight position={[6, 12, 8]} intensity={0.8} color="#f0f6fc" />
       {/* Procedural studio lighting: no HDR download, so it works offline.
           Kept dim enough that white surfaces stay under the bloom threshold. */}
       <Environment resolution={128}>
-        <Lightformer form="rect" intensity={0.8} color="#fff3e2" position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[30, 30, 1]} />
-        <Lightformer form="rect" intensity={0.6} color={AMBER} position={[-12, 4, -6]} rotation-y={Math.PI / 3} scale={[10, 4, 1]} />
+        <Lightformer form="rect" intensity={0.8} color="#e0f2fe" position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[30, 30, 1]} />
+        <Lightformer form="rect" intensity={0.6} color={SKY} position={[-12, 4, -6]} rotation-y={Math.PI / 3} scale={[10, 4, 1]} />
         <Lightformer form="rect" intensity={0.4} color="#ffffff" position={[12, 3, 8]} rotation-y={-Math.PI / 3} scale={[8, 3, 1]} />
       </Environment>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[120, 120]} />
-        <meshStandardMaterial color="#17130f" roughness={1} />
+        <meshStandardMaterial color="#071324" roughness={1} />
       </mesh>
       <Grid
         position={[0, 0.001, 0]}
@@ -161,8 +161,8 @@ function Stack({ floors, width, shell, seam }: { floors: number; width: number; 
 
 function Hub({ reducedMotion }: { reducedMotion: boolean }) {
   const groundRing = useRef<THREE.Group>(null)
-  const beacon = useMemo(() => new THREE.MeshBasicMaterial({ color: glow(AMBER, 6), toneMapped: false }), [])
-  const seam = useMemo(() => new THREE.MeshBasicMaterial({ color: glow(AMBER, 3), toneMapped: false }), [])
+  const beacon = useMemo(() => new THREE.MeshBasicMaterial({ color: glow(SKY, 6), toneMapped: false }), [])
+  const seam = useMemo(() => new THREE.MeshBasicMaterial({ color: glow(SKY, 3), toneMapped: false }), [])
   const shell = useMemo(() => new THREE.MeshStandardMaterial({ color: SHELL, roughness: 0.5, metalness: 0.05 }), [])
   const ringPoints = useMemo(
     () => Array.from({ length: 129 }, (_, i) => {
@@ -177,21 +177,21 @@ function Hub({ reducedMotion }: { reducedMotion: boolean }) {
     if (reducedMotion) return
     if (groundRing.current) groundRing.current.rotation.y += delta * 0.15
     // Slow "breathing" beacon
-    beacon.color.copy(glow(AMBER, 3 + Math.sin(state.clock.elapsedTime * 2.2) * 2.5))
+    beacon.color.copy(glow(SKY, 3 + Math.sin(state.clock.elapsedTime * 2.2) * 2.5))
   })
 
   return (
     <group>
       <mesh position={[0, 0.15, 0]}>
         <cylinderGeometry args={[2.3, 2.45, 0.3, 72]} />
-        <meshStandardMaterial color="#221d1a" roughness={0.7} metalness={0.2} />
+        <meshStandardMaterial color="#0f2137" roughness={0.7} metalness={0.2} />
       </mesh>
       <mesh position={[0, 0.305, 0]} rotation-x={-Math.PI / 2}>
         <ringGeometry args={[2.16, 2.24, 96]} />
-        <meshBasicMaterial color={glow(AMBER, 2.2)} toneMapped={false} />
+        <meshBasicMaterial color={glow(SKY, 2.2)} toneMapped={false} />
       </mesh>
       <group ref={groundRing}>
-        <Line points={ringPoints} color={AMBER} lineWidth={1} dashed dashSize={0.25} gapSize={0.35} transparent opacity={0.5} />
+        <Line points={ringPoints} color={SKY} lineWidth={1} dashed dashSize={0.25} gapSize={0.35} transparent opacity={0.5} />
       </group>
       <group position={[0, 0.2, 0]}>
         <Stack floors={3} width={1.5} shell={shell} seam={seam} />
