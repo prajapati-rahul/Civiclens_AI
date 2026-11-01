@@ -16,11 +16,14 @@ from __future__ import annotations
 import os
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # Load environment variables from .env (if present) before importing anything
 # that reads env vars at module level.
@@ -92,6 +95,26 @@ app.include_router(demo_router)
 async def health_check() -> dict:
     """Simple liveness probe."""
     return {"status": "ok", "version": "1.0.0"}
+
+
+# ---------------------------------------------------------------------------
+# Frontend (production): serve the built React app from the same origin
+# ---------------------------------------------------------------------------
+
+_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+if _DIST.is_dir():
+    app.mount("/assets", StaticFiles(directory=_DIST / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def spa(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        # Real files (favicon etc.) as-is; any other path is a client-side route
+        file = (_DIST / path).resolve()
+        if path and file.is_file() and _DIST in file.parents:
+            return FileResponse(file)
+        return FileResponse(_DIST / "index.html")
 
 
 # ---------------------------------------------------------------------------
