@@ -14,19 +14,10 @@ import {
   Globe,
   Clock,
 } from 'lucide-react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
 import { auditsApi } from '../utils/api'
 import type { Audit, FindingCategory, FindingSeverity } from '../types'
-import { formatDate, getDomainFromUrl, scoreColor } from '../utils/helpers'
-import ScoreRing from '../components/ScoreRing'
+import { formatDate, getDomainFromUrl, auditLoadError, truncate } from '../utils/helpers'
+import AuditControlRoom from '../components/AuditControlRoom'
 import SeverityBadge from '../components/SeverityBadge'
 import CategoryBadge from '../components/CategoryBadge'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -64,23 +55,15 @@ export default function AuditResults() {
     try {
       const res = await auditsApi.get(id)
       setAudit(res.data)
-    } catch {
-      setAudit(DEMO_AUDIT)
+    } catch (err) {
+      setAudit(null)
+      setError(auditLoadError(err))
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => { fetchAudit() }, [id])
-
-  const severityChart = useMemo(() => {
-    if (!audit) return []
-    return SEVERITY_ORDER.map(s => ({
-      name: s.charAt(0).toUpperCase() + s.slice(1),
-      count: audit.findings.filter(f => f.severity === s).length,
-      color: SEVERITY_COLORS[s],
-    })).filter(x => x.count > 0)
-  }, [audit])
 
   const filteredFindings = useMemo(() => {
     if (!audit) return []
@@ -116,19 +99,19 @@ export default function AuditResults() {
     )
   }
 
-  const score = audit.metadata?.overall_score ?? 0
   const aiMode = audit.metadata?.ai_mode
 
   return (
+    <div className="min-h-full bg-taupe-950 text-taupe-200">
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-glow-normal" />
             Audit Results
           </h1>
-          <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-taupe-300">
             <span className="flex items-center gap-1">
               <Globe className="w-3.5 h-3.5" />
               {getDomainFromUrl(audit.url)}
@@ -149,7 +132,7 @@ export default function AuditResults() {
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-600 mt-1 italic">"{audit.task}"</p>
+          <p className="text-sm text-taupe-200 mt-1 italic">"{audit.task}"</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
@@ -172,82 +155,27 @@ export default function AuditResults() {
         </div>
       </div>
 
-      {/* Summary row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-5 flex items-center gap-4">
-          <ScoreRing score={score} size={72} />
-          <div>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Overall Score</p>
-            <p className={`text-2xl font-black ${scoreColor(score)}`}>{score}/100</p>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {score >= 80 ? 'Good' : score >= 60 ? 'Needs work' : 'Poor'}
-            </p>
-          </div>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Findings</p>
-          <p className="text-3xl font-black text-slate-800">{audit.findings.length}</p>
-          <p className="text-xs text-slate-500 mt-1">
-            {audit.findings.filter(f => f.severity === 'critical').length} critical
-          </p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Pages Inspected</p>
-          <p className="text-3xl font-black text-slate-800">{audit.metadata?.pages_inspected ?? '—'}</p>
-          <p className="text-xs text-slate-500 mt-1">{audit.metadata?.checks_run ?? '—'} checks run</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-2">By Severity</p>
-          {SEVERITY_ORDER.map(s => {
-            const count = audit.findings.filter(f => f.severity === s).length
-            if (count === 0) return null
-            return (
-              <div key={s} className="flex items-center gap-2 mb-1">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SEVERITY_COLORS[s] }} />
-                <span className="text-xs text-slate-600 capitalize">{s}</span>
-                <span className="text-xs font-bold text-slate-700 ml-auto">{count}</span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      <AuditControlRoom
+        audit={audit}
+        activeCategory={categoryFilter}
+        onCategory={setCategoryFilter}
+        onFinding={setModalFinding}
+      />
 
       {/* Summary text */}
       {audit.metadata?.summary && (
-        <div className="card p-5 border-l-4 border-civic-blue">
-          <p className="text-sm text-slate-700 leading-relaxed">{audit.metadata.summary}</p>
+        <div className="glass p-5 border-l-4 border-l-glow-degraded">
+          <p className="text-sm text-taupe-200 leading-relaxed">{audit.metadata.summary}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart */}
-        <div className="card p-5 lg:col-span-1">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4">Severity Distribution</h2>
-          {severityChart.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-sm text-slate-400">No findings</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={severityChart} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {severityChart.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Findings table */}
-        <div className="card overflow-hidden lg:col-span-2">
-          <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center gap-3">
-            <h2 className="text-sm font-semibold text-slate-700 mr-auto">
+      {/* Findings table */}
+        <div className="glass overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/10 flex flex-wrap items-center gap-3">
+            <h2 className="text-sm font-semibold text-white mr-auto">
               Findings
               {filteredFindings.length !== audit.findings.length && (
-                <span className="ml-2 text-xs text-slate-400">
+                <span className="ml-2 text-xs text-taupe-300">
                   ({filteredFindings.length} of {audit.findings.length})
                 </span>
               )}
@@ -258,7 +186,7 @@ export default function AuditResults() {
               <select
                 value={severityFilter}
                 onChange={e => setSeverityFilter(e.target.value as FindingSeverity | 'all')}
-                className="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-civic-blue"
+                className="text-xs bg-taupe-900 text-taupe-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
                 aria-label="Filter by severity"
               >
                 <option value="all">All severities</option>
@@ -267,7 +195,7 @@ export default function AuditResults() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value as FindingCategory | 'all')}
-                className="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-civic-blue"
+                className="text-xs bg-taupe-900 text-taupe-200 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-glow-degraded"
                 aria-label="Filter by category"
               >
                 <option value="all">All categories</option>
@@ -288,12 +216,12 @@ export default function AuditResults() {
               description="Try changing the severity or category filter."
             />
           ) : (
-            <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
+            <div className="divide-y divide-white/5 max-h-[520px] overflow-y-auto">
               {filteredFindings.map((finding) => (
                 <div
                   key={finding.id}
                   onClick={() => setModalFinding(finding)}
-                  className="flex items-start gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group cursor-pointer"
+                  className="flex items-start gap-3 px-5 py-4 hover:bg-white/5 transition-colors group cursor-pointer"
                   aria-label={`Inspect finding: ${finding.title}`}
                   role="button"
                   tabIndex={0}
@@ -315,25 +243,24 @@ export default function AuditResults() {
                       <SeverityBadge severity={finding.severity} size="sm" />
                       <CategoryBadge category={finding.category} size="sm" />
                     </div>
-                    <p className="text-sm font-medium text-slate-800 group-hover:text-civic-blue transition-colors leading-snug">
+                    <p className="text-sm font-medium text-white group-hover:text-glow-degraded transition-colors leading-snug">
                       {finding.title}
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {finding.evidence.slice(0, 95)}...
+                    <p className="text-xs text-taupe-300 mt-0.5 truncate">
+                      {truncate(finding.evidence, 95)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 mt-1">
-                    <span className="text-xs font-semibold text-civic-blue opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
+                    <span className="text-xs font-semibold text-glow-degraded opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
                       Inspect & Fix
                     </span>
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-civic-blue transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-taupe-400 group-hover:text-glow-degraded transition-colors" />
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
 
       {/* Bottom actions */}
       <div className="flex flex-wrap gap-3 pt-2">
@@ -369,6 +296,7 @@ export default function AuditResults() {
             : undefined
         }
       />
+    </div>
     </div>
   )
 }

@@ -143,21 +143,26 @@ def test_deterministic_checks():
 
 def test_scoring_algorithm():
     test_findings = [
-        {"severity": "critical"},  # -25
-        {"severity": "high"},      # -15
-        {"severity": "medium"},    # -8
+        {"title": "A", "severity": "critical"},  # 25
+        {"title": "B", "severity": "high"},      # 15
+        {"title": "C", "severity": "medium"},    # 8
     ]
     score = _compute_score(test_findings)
-    assert score == 52, f"Expected score 52, got {score}"
+    assert score == 73, f"Expected score 73, got {score}"  # 100 * e^(-48/150)
 
-    # Score clamping
-    lots_of_critical = [{"severity": "critical"}] * 10
-    score_zero = _compute_score(lots_of_critical)
-    assert score_zero == 0, f"Expected 0, got {score_zero}"
+    # Repeats of one issue cost far less than distinct issues
+    one_issue_repeated = [{"title": "Missing alt", "severity": "critical"} for _ in range(10)]
+    ten_distinct_issues = [{"title": f"Issue {i}", "severity": "critical"} for i in range(10)]
+    score_repeated = _compute_score(one_issue_repeated)
+    score_distinct = _compute_score(ten_distinct_issues)
+    assert score_repeated == 74, f"Expected 74, got {score_repeated}"
+    assert score_distinct == 19, f"Expected 19, got {score_distinct}"
 
+    # Stays within [0, 100]
+    assert _compute_score([{"title": f"x{i}", "severity": "critical"} for i in range(100)]) == 0
     score_empty = _compute_score([])
     assert score_empty == 100, f"Expected 100, got {score_empty}"
-    print("[PASS] Scoring engine PASSED (accurate weighting and [0,100] bounding)")
+    print("[PASS] Scoring engine PASSED (issue grouping, repeat damping and [0,100] bounding)")
 
 async def test_database_lifecycle():
     await init_db()

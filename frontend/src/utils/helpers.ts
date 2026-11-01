@@ -63,6 +63,21 @@ export function getDomainFromUrl(url: string): string {
   }
 }
 
+// Glow colour for an audit in the dashboard city and activity feed
+export function towerColor(a: { status: string; overall_score?: number }): string {
+  if (a.status === 'failed') return '#f43f5e'
+  if (a.status !== 'completed') return '#f59e0b'
+  const s = a.overall_score ?? 0
+  return s >= 80 ? '#34d399' : s >= 60 ? '#f59e0b' : '#f43f5e'
+}
+
+export function auditLoadError(err: unknown): string {
+  const status = (err as { response?: { status?: number } })?.response?.status
+  return status === 404
+    ? 'Audit not found. It may have been deleted.'
+    : 'Could not load this audit. Make sure the backend is running on port 8000.'
+}
+
 export function truncate(str: string, max: number): string {
   if (str.length <= max) return str
   return str.slice(0, max) + '…'

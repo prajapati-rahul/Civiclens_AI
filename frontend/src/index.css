@@ -36,6 +36,10 @@
   .card {
     @apply bg-white rounded-xl border border-slate-200 shadow-sm;
   }
+
+  .glass {
+    @apply rounded-2xl border border-white/10 bg-taupe-800/70 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.35)];
+  }
   
   .badge-critical {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700;
@@ -56,4 +60,21 @@
   .badge-info {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600;
   }
+}
+
+/* Dotted "data flow" along map connection lines */
+@keyframes flow {
+  to { stroke-dashoffset: -16; }
+}
+.flow-line {
+  animation: flow 1.2s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-line { animation: none; }
+}
+
+/* Staggered entrance for dashboard lists */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }

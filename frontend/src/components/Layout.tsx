@@ -44,25 +44,25 @@ export default function Layout() {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-30 w-60 bg-navy-900 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-30 w-60 bg-[#14110f] border-r border-white/[0.06] flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
         aria-label="Sidebar navigation"
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-navy-700">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-white/[0.06]">
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-civic-blue rounded-lg flex items-center justify-center flex-shrink-0">
-              <Microscope className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
+            <div className="w-8 h-8 rounded-lg bg-amber-400/10 ring-1 ring-amber-400/30 flex items-center justify-center flex-shrink-0">
+              <Microscope className="w-[18px] h-[18px] text-amber-400" />
             </div>
             <div>
-              <span className="text-white font-bold text-sm leading-none block">CivicLens</span>
-              <span className="text-navy-300 text-[10px] font-medium tracking-wide">AI Audit</span>
+              <span className="font-display text-white font-semibold text-sm tracking-tight leading-none block">CivicLens</span>
+              <span className="font-mono text-taupe-400 text-[10px] tracking-[0.18em] uppercase">AI Audit</span>
             </div>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden w-7 h-7 flex items-center justify-center text-navy-400 hover:text-white rounded"
+            className="lg:hidden w-7 h-7 flex items-center justify-center text-taupe-400 hover:text-white rounded"
             aria-label="Close menu"
           >
             <X className="w-4 h-4" />
@@ -79,16 +79,16 @@ export default function Layout() {
                 clsx(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
                   isActive
-                    ? 'bg-navy-700 text-white'
-                    : 'text-navy-300 hover:bg-navy-800 hover:text-white'
+                    ? 'bg-white/[0.06] text-white'
+                    : 'text-taupe-300 hover:bg-white/[0.04] hover:text-white'
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={clsx('w-4 h-4 flex-shrink-0', isActive ? 'text-civic-sky' : 'text-navy-400 group-hover:text-navy-200')} />
+                  <Icon className={clsx('w-4 h-4 flex-shrink-0', isActive ? 'text-amber-400' : 'text-taupe-400 group-hover:text-taupe-200')} />
                   {label}
-                  {isActive && <ChevronRight className="w-3 h-3 ml-auto text-navy-400" />}
+                  {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />}
                 </>
               )}
             </NavLink>
@@ -96,10 +96,10 @@ export default function Layout() {
         </nav>
 
         {/* Bottom footer */}
-        <div className="px-4 py-4 border-t border-navy-800">
-          <p className="text-[10px] text-navy-500 leading-relaxed">
+        <div className="px-4 py-4 border-t border-white/[0.06]">
+          <p className="font-mono text-[10px] text-taupe-400 leading-relaxed">
             CivicLens AI v1.0<br />
-            <span className="text-navy-600">For government digital services</span>
+            <span className="text-taupe-400/70">For government digital services</span>
           </p>
         </div>
       </aside>
@@ -107,11 +107,11 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-10">
+        <header className="h-16 bg-[#14110f] border-b border-white/[0.06] flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-taupe-300 hover:bg-white/[0.06] transition-colors"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -120,22 +120,23 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-2">
-            {location.pathname !== '/demo' && (
+            {!['/demo', '/dashboard'].includes(location.pathname) && (
               <Link
                 to="/demo"
-                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-lg transition-colors border border-violet-200"
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-taupe-200 hover:bg-white/[0.06] px-3 py-1.5 rounded-full transition-colors border border-white/15"
               >
                 <FlaskConical className="w-3.5 h-3.5" />
                 View Demo
               </Link>
             )}
-            <Link
+            {/* The dashboard hero has its own New audit button */}
+            {location.pathname !== '/dashboard' && <Link
               to="/audit/new"
-              className="btn-primary text-sm py-1.5 px-3"
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3.5 py-1.5 text-sm font-semibold text-[#14110f] hover:bg-amber-300 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               New Audit
-            </Link>
+            </Link>}
           </div>
         </header>
 
@@ -176,8 +177,8 @@ function Breadcrumb() {
 
           return (
             <li key={idx} className="flex items-center gap-1">
-              {idx > 0 && <ChevronRight className="w-3 h-3 text-slate-400" />}
-              <span className={isLast ? 'font-medium text-slate-700' : 'text-slate-400'}>
+              {idx > 0 && <ChevronRight className="w-3 h-3 text-taupe-400" />}
+              <span className={isLast ? 'font-medium text-white' : 'text-taupe-400'}>
                 {label}
               </span>
             </li>

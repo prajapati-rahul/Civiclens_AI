@@ -23,10 +23,27 @@ export default {
           green: '#16a34a',
           amber: '#d97706',
           red: '#dc2626',
-        }
+        },
+        // Warm dark "control room" theme used by the results map
+        taupe: {
+          200: '#d6ccc4',
+          300: '#b8aba1',
+          400: '#968a80',
+          700: '#463e39',
+          800: '#332d29',
+          900: '#26211e',
+          950: '#1a1614',
+        },
+        glow: {
+          normal: '#4ade80',
+          degraded: '#f5a524',
+          critical: '#f43f5e',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Geist', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"Geist Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
     }
   },

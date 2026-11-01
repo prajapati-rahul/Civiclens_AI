@@ -12,6 +12,7 @@ import {
 import { auditsApi } from '../utils/api'
 import type { Audit } from '../types'
 import { ORIGINAL_JOURNEY, REDESIGNED_JOURNEY, DEMO_AUDIT } from '../data/demoData'
+import { auditLoadError } from '../utils/helpers'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorAlert from '../components/ErrorAlert'
 
@@ -31,9 +32,7 @@ export default function JourneyComparison() {
     }
     auditsApi.get(id)
       .then(res => setAudit(res.data))
-      .catch(() => {
-        setAudit(DEMO_AUDIT)
-      })
+      .catch(err => setError(auditLoadError(err)))
       .finally(() => setLoading(false))
   }, [id])
 

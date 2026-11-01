@@ -4,11 +4,9 @@ import { ShieldAlert, ArrowRight, Sparkles } from 'lucide-react'
 import {
   CheckCircle2,
   XCircle,
-  Globe,
+  Clock,
   Search,
-  Brain,
   FileCheck,
-  Layers,
   FlaskConical,
 } from 'lucide-react'
 import { auditsApi } from '../utils/api'
@@ -45,34 +43,20 @@ const VERIFIED_GOV_SITES = [
   },
 ]
 
+// /status only reports pending | running | completed | failed, so show exactly those steps.
 const STAGES: Stage[] = [
-  { key: 'validating', label: 'Validating URL', icon: Globe },
-  { key: 'fetching', label: 'Fetching pages', icon: Search },
-  { key: 'analyzing', label: 'Running checks', icon: Layers },
-  { key: 'ai', label: 'AI analysis', icon: Brain },
-  { key: 'compiling', label: 'Compiling results', icon: FileCheck },
+  { key: 'pending', label: 'Queued', icon: Clock },
+  { key: 'running', label: 'Fetching pages and running checks', icon: Search },
+  { key: 'completed', label: 'Results ready', icon: FileCheck },
 ]
-
-function messageToStage(msg?: string): number {
-  if (!msg) return 0
-  const m = msg.toLowerCase()
-  if (m.includes('compil') || m.includes('result')) return 4
-  if (m.includes('ai') || m.includes('gemini') || m.includes('analyz')) return 3
-  if (m.includes('check') || m.includes('inspect')) return 2
-  if (m.includes('fetch') || m.includes('crawl') || m.includes('page')) return 1
-  if (m.includes('valid')) return 0
-  return 1
-}
 
 export default function AuditProgress() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [status, setStatus] = useState<string>('pending')
-  const [progress, setProgress] = useState(0)
-  const [message, setMessage] = useState<string>('Starting audit…')
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const stageIdx = messageToStage(message)
+  const stageIdx = Math.max(0, STAGES.findIndex(s => s.key === status))
 
   useEffect(() => {
     if (!id) return
@@ -82,15 +66,13 @@ export default function AuditProgress() {
         const res = await auditsApi.status(id)
         const data = res.data
         setStatus(data.status)
-        if (data.progress != null) setProgress(data.progress)
-        if (data.message) setMessage(data.message)
 
         if (data.status === 'completed') {
           clearInterval(intervalRef.current!)
           setTimeout(() => navigate(`/audit/${id}/results`), 800)
         } else if (data.status === 'failed') {
           clearInterval(intervalRef.current!)
-          setError(data.error_message ?? data.message ?? 'The audit failed. The site may be unreachable or returned an error.')
+          setError(data.error_message ?? 'The audit failed. The site may be unreachable or returned an error.')
         }
       } catch {
         setError('Lost connection to the backend. Is it still running?')
@@ -103,7 +85,7 @@ export default function AuditProgress() {
     return () => clearInterval(intervalRef.current!)
   }, [id, navigate])
 
-  const displayProgress = status === 'completed' ? 100 : Math.max(progress, (stageIdx / STAGES.length) * 90 + 5)
+  const displayProgress = ((stageIdx + 1) / STAGES.length) * 100
 
   return (
     <div className="p-6 max-w-2xl mx-auto mt-8">
@@ -121,7 +103,7 @@ export default function AuditProgress() {
           <h1 className="text-xl font-bold text-slate-900 mb-1">
             {status === 'completed' ? 'Audit Complete' : status === 'failed' ? 'Audit Failed' : 'Audit in Progress'}
           </h1>
-          <p className="text-sm text-slate-500">{message}</p>
+          <p className="text-sm text-slate-500" aria-live="polite">{status === 'failed' ? 'Stopped' : STAGES[stageIdx].label}</p>
         </div>
 
         {error ? (
@@ -178,8 +160,7 @@ export default function AuditProgress() {
           <>
             <ProgressBar
               value={displayProgress}
-              label={`${Math.round(displayProgress)}% complete`}
-              showValue
+              label={`Step ${stageIdx + 1} of ${STAGES.length}`}
               color={status === 'completed' ? 'green' : 'blue'}
               size="md"
             />
@@ -187,7 +168,7 @@ export default function AuditProgress() {
             <div className="mt-8 space-y-3">
               {STAGES.map((stage, idx) => {
                 const done = idx < stageIdx || status === 'completed'
-                const active = idx === stageIdx && status === 'running'
+                const active = idx === stageIdx && status !== 'completed'
                 const pending = idx > stageIdx && status !== 'completed'
 
                 return (

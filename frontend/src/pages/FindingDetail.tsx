@@ -18,7 +18,7 @@ import SeverityBadge from '../components/SeverityBadge'
 import CategoryBadge from '../components/CategoryBadge'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorAlert from '../components/ErrorAlert'
-import { categoryLabel } from '../utils/helpers'
+import { categoryLabel, auditLoadError } from '../utils/helpers'
 
 const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info']
 
@@ -39,9 +39,7 @@ export default function FindingDetail() {
     }
     auditsApi.get(id)
       .then(res => setAudit(res.data))
-      .catch(() => {
-        setAudit(DEMO_AUDIT)
-      })
+      .catch(err => setError(auditLoadError(err)))
       .finally(() => setLoading(false))
   }, [id])
 

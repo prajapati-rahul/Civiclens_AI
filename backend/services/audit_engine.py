@@ -14,6 +14,7 @@ Pipeline:
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import ssl
@@ -621,11 +622,20 @@ def check_viewport_meta(
 def _compute_score(findings: List[Dict[str, Any]]) -> int:
     """
     Compute an overall score 0–100.
-    Starts at 100 and deducts points per finding weighted by severity.
-    Score is clamped to [0, 100].
+
+    Findings are grouped by issue (title). Each distinct issue costs its worst
+    severity weight; repeats of the same issue (e.g. 40 images missing alt text)
+    add only a log-scaled extra. The total maps onto 0–100 with an exponential
+    curve, so scores spread out instead of hitting 0 after a handful of issues.
+    Roughly: 6 distinct critical issues ≈ 37, 1 critical issue ≈ 85.
     """
-    deduction = sum(_SEVERITY_WEIGHT.get(f.get("severity", "info"), 0) for f in findings)
-    return max(0, min(100, 100 - deduction))
+    groups: Dict[Any, List[int]] = {}
+    for f in findings:
+        # Untitled findings can't be matched as repeats, so each counts on its own
+        key = f.get("title") or id(f)
+        groups.setdefault(key, []).append(_SEVERITY_WEIGHT.get(f.get("severity", "info"), 0))
+    deduction = sum(max(ws) * (1 + 0.25 * math.log2(len(ws))) for ws in groups.values())
+    return max(0, min(100, round(100 * math.exp(-deduction / 150))))
 
 
 # ---------------------------------------------------------------------------

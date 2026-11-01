@@ -24,7 +24,7 @@ import {
 import { DEMO_AUDIT, ORIGINAL_JOURNEY, REDESIGNED_JOURNEY } from '../data/demoData'
 import type { Finding, FindingSeverity, FindingCategory } from '../types'
 import { formatDate, scoreColor } from '../utils/helpers'
-import ScoreRing from '../components/ScoreRing'
+import AuditControlRoom from '../components/AuditControlRoom'
 import SeverityBadge from '../components/SeverityBadge'
 import CategoryBadge from '../components/CategoryBadge'
 import FindingInspectionModal from '../components/FindingInspectionModal'
@@ -209,60 +209,12 @@ export default function DemoWorkspace() {
       {/* TAB 1: OVERVIEW & FINDINGS */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Metrics Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="card p-5 flex items-center gap-4">
-              <ScoreRing score={audit.metadata?.overall_score ?? 42} size={76} />
-              <div>
-                <p className="text-xs uppercase font-semibold text-slate-400">Civic Health Score</p>
-                <div className="text-2xl font-bold text-slate-900">
-                  {audit.metadata?.overall_score ?? 42}
-                  <span className="text-xs font-normal text-slate-400"> / 100</span>
-                </div>
-                <p className="text-xs text-red-600 font-medium mt-0.5">Urgent Remediation</p>
-              </div>
-            </div>
-
-            <div className="card p-5">
-              <p className="text-xs uppercase font-semibold text-slate-400 mb-2">Severity Breakdown</p>
-              <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-red-700 font-medium">Critical</span>
-                  <span className="font-bold text-slate-800">{severityCounts.critical}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-orange-700 font-medium">High</span>
-                  <span className="font-bold text-slate-800">{severityCounts.high}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-amber-700 font-medium">Medium</span>
-                  <span className="font-bold text-slate-800">{severityCounts.medium}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-700 font-medium">Low / Info</span>
-                  <span className="font-bold text-slate-800">{severityCounts.low + severityCounts.info}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card p-5">
-              <p className="text-xs uppercase font-semibold text-slate-400 mb-2">Inspection Scope</p>
-              <div className="space-y-1 text-xs text-slate-600">
-                <p><strong className="text-slate-800">4</strong> pages analyzed</p>
-                <p><strong className="text-slate-800">23</strong> automated checks run</p>
-                <p><strong className="text-slate-800">Deterministic</strong> mode</p>
-                <p className="text-slate-400 text-[11px] pt-1">Safe simulated crawl</p>
-              </div>
-            </div>
-
-            <div className="card p-5">
-              <p className="text-xs uppercase font-semibold text-slate-400 mb-2">Primary Barrier</p>
-              <p className="text-xs font-semibold text-slate-800">Excessive Cognitive Friction</p>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                14 upfront form fields before eligibility confirmation + 16th grade legal readability level.
-              </p>
-            </div>
-          </div>
+          <AuditControlRoom
+            audit={audit}
+            activeCategory={selectedCategory}
+            onCategory={setSelectedCategory}
+            onFinding={f => openInspectionModal(f)}
+          />
 
           {/* Filters Bar */}
           <div className="card p-4 flex flex-wrap items-center justify-between gap-4">
