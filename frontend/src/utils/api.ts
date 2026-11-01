@@ -12,7 +12,7 @@ export const auditsApi = {
   create: (data: AuditRequest) => api.post<{ id: string }>('/audits', data),
   delete: (id: string) => api.delete(`/audits/${id}`),
   clearAll: () => api.post('/audits/clear'),
-  status: (id: string) => api.get<{ status: string; progress?: number; message?: string }>(`/audits/${id}/status`),
+  status: (id: string) => api.get<{ status: string; progress?: number; message?: string; error_message?: string }>(`/audits/${id}/status`),
   report: (id: string) => api.get(`/audits/${id}/report`),
 }
 

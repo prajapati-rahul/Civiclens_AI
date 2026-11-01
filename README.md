@@ -46,7 +46,7 @@ CivicLens AI is structured as a modern, decoupled full-stack application:
 - **Backend:** Python 3.12, FastAPI, BeautifulSoup4, HTTPX, SQLite3 (WAL/standard transaction engine).
   - Non-blocking asynchronous task execution with background audit runners.
   - RESTful API with status polling, full report generation, and CRUD history management.
-- **Persistence:** Local SQLite database storing audits, findings, timestamps, and execution metadata. Zero external database infrastructure needed.
+- **Persistence:** Flexible dual database adapter supporting **SQLite** (default zero-setup local storage) or **MongoDB** (local or MongoDB Atlas cloud cluster via `DATABASE_URL=mongodb+srv://...`). Zero migration headache.
 
 ---
 
@@ -83,7 +83,8 @@ CivicLens AI runs in two distinct, transparent modes:
      - Extreme paragraph length and readability hurdles.
    - Calculates bounded quality score (0–100) using weighted deductions.
 2. **AI-Enhanced Mode (Grounded in Real Extracted Text):**
-   - When a `GEMINI_API_KEY` is provided, Google Gemini 1.5 Flash evaluates extracted page text against the user's specific citizen task.
+   - **xAI (Grok):** When `XAI_API_KEY` is provided, xAI's Grok model (`grok-2-latest` / `grok-beta`) evaluates extracted public page text against the user's specific citizen task.
+   - **Google Gemini:** Alternatively, `GEMINI_API_KEY` can be used to run Gemini 1.5 Flash.
    - AI findings are strictly grounded in collected text, flagged with an "AI Suggested" badge, and marked for human review.
    - If an AI call times out or encounters invalid JSON, the system recovers gracefully without discarding deterministic findings.
 
@@ -142,9 +143,12 @@ python -m venv .venv
 pip install -r requirements.txt
 cp .env.example .env
 ```
-*(Optional)* Add your Gemini API key to `backend/.env` for AI-enhanced mode:
+*(Optional)* Add your xAI API key (or Gemini API key) to `backend/.env` for AI-enhanced mode:
 ```env
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+XAI_API_KEY=your_actual_xai_api_key_here
+XAI_MODEL=grok-2-latest
+# Optional alternative:
+# GEMINI_API_KEY=your_actual_gemini_api_key_here
 ```
 
 ### 2. Set Up Frontend
@@ -241,7 +245,7 @@ CivicLens AI/
 │       ├── audit_engine.py      # Core inspection pipeline & 8 deterministic heuristic rules
 │       ├── ssrf_guard.py        # IP validation, range blocking & DNS resolution guard
 │       ├── accessibility.py     # DOM-level WCAG & optional Playwright wrapper
-│       └── ai_analyzer.py       # Grounded Gemini 1.5 Flash heuristic integration
+│       └── ai_analyzer.py       # Grounded xAI (Grok) & Gemini heuristic integration
 │
 ├── frontend/
 │   ├── package.json             # React 18, Vite, Tailwind, Recharts, jsPDF

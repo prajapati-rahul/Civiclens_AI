@@ -1,0 +1,45 @@
+# Environment variables & secrets (NEVER COMMIT)
+.env
+.env.*
+backend/.env
+frontend/.env
+*.env
+*.env.local
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+backend/.venv/
+env/
+
+# Node modules & Vite cache
+node_modules/
+frontend/node_modules/
+.vite/
+frontend/.vite/
+
+# Python bytecode & cache
+__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# SQLite & databases
+*.db
+*.sqlite
+*.sqlite3
+backend/civiclens.db
+
+# Build outputs
+frontend/dist/
+dist/
+build/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

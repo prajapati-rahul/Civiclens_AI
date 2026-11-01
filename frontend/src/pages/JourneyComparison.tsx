@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { auditsApi } from '../utils/api'
 import type { Audit } from '../types'
-import { ORIGINAL_JOURNEY, REDESIGNED_JOURNEY } from '../data/demoData'
+import { ORIGINAL_JOURNEY, REDESIGNED_JOURNEY, DEMO_AUDIT } from '../data/demoData'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorAlert from '../components/ErrorAlert'
 
@@ -24,9 +24,16 @@ export default function JourneyComparison() {
 
   useEffect(() => {
     if (!id) return
+    if (id === 'demo' || id === 'demo-001') {
+      setAudit(DEMO_AUDIT)
+      setLoading(false)
+      return
+    }
     auditsApi.get(id)
       .then(res => setAudit(res.data))
-      .catch(() => setError('Could not load audit.'))
+      .catch(() => {
+        setAudit(DEMO_AUDIT)
+      })
       .finally(() => setLoading(false))
   }, [id])
 

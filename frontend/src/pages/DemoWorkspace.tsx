@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Filter,
   CheckSquare,
   Square,
@@ -16,6 +18,8 @@ import {
   Bot,
   Layers,
   FileText,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import { DEMO_AUDIT, ORIGINAL_JOURNEY, REDESIGNED_JOURNEY } from '../data/demoData'
 import type { Finding, FindingSeverity, FindingCategory } from '../types'
@@ -23,13 +27,15 @@ import { formatDate, scoreColor } from '../utils/helpers'
 import ScoreRing from '../components/ScoreRing'
 import SeverityBadge from '../components/SeverityBadge'
 import CategoryBadge from '../components/CategoryBadge'
+import FindingInspectionModal from '../components/FindingInspectionModal'
 import { exportAuditReport } from '../utils/exportReport'
 
 export default function DemoWorkspace() {
   const [audit, setAudit] = useState(DEMO_AUDIT)
   const [selectedSeverity, setSelectedSeverity] = useState<FindingSeverity | 'all'>('all')
   const [selectedCategory, setSelectedCategory] = useState<FindingCategory | 'all'>('all')
-  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null)
+  const [modalFinding, setModalFinding] = useState<Finding | null>(null)
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({})
   const [activeTab, setActiveTab] = useState<'overview' | 'journey' | 'checklist'>('overview')
   const [exporting, setExporting] = useState(false)
   const [resetNotification, setResetNotification] = useState(false)
@@ -46,11 +52,22 @@ export default function DemoWorkspace() {
     setCheckedDocs(prev => ({ ...prev, [doc]: !prev[doc] }))
   }
 
+  const toggleExpandCard = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const openInspectionModal = (finding: Finding, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setModalFinding(finding)
+  }
+
   const handleResetDemo = () => {
     setAudit(DEMO_AUDIT)
     setSelectedSeverity('all')
     setSelectedCategory('all')
-    setSelectedFinding(null)
+    setModalFinding(null)
+    setExpandedCards({})
     setActiveTab('overview')
     setCheckedDocs({
       'Recent pay stub or income statement': true,
@@ -292,91 +309,170 @@ export default function DemoWorkspace() {
 
           {/* Findings List */}
           <div className="space-y-3">
-            {filteredFindings.map(finding => (
-              <div
-                key={finding.id}
-                onClick={() => setSelectedFinding(finding)}
-                className={`card p-5 cursor-pointer transition-all hover:border-civic-blue hover:shadow-md ${
-                  selectedFinding?.id === finding.id ? 'border-civic-blue ring-2 ring-civic-blue/20 bg-blue-50/20' : ''
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <SeverityBadge severity={finding.severity} />
-                    <CategoryBadge category={finding.category} />
-                    <span className="text-xs font-mono text-slate-400">ID: {finding.id}</span>
-                  </div>
-                  <span className="text-xs font-medium text-slate-500">
-                    Confidence: {Math.round(finding.confidence * 100)}%
-                  </span>
-                </div>
-
-                <h3 className="text-base font-semibold text-slate-900">{finding.title}</h3>
-
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-                  <strong className="text-slate-800">Citizen Impact:</strong> {finding.rationale}
-                </p>
-
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span className="truncate max-w-md font-mono text-[11px] text-slate-400">
-                    {finding.page_url}
-                  </span>
-                  <span className="text-civic-blue font-semibold inline-flex items-center gap-1">
-                    Inspect Evidence & Fix
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Evidence Inspection Drawer/Modal */}
-          {selectedFinding && (
-            <div className="card p-6 border-civic-blue ring-2 ring-civic-blue/20 bg-slate-50/50 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="badge-critical text-[10px] uppercase">Grounded Finding Details</span>
-                  <h3 className="text-lg font-bold text-navy-900 mt-1">{selectedFinding.title}</h3>
-                </div>
-                <button
-                  onClick={() => setSelectedFinding(null)}
-                  className="btn-secondary text-xs px-2.5 py-1"
+            {filteredFindings.map((finding) => {
+              const isExpanded = !!expandedCards[finding.id]
+              return (
+                <div
+                  key={finding.id}
+                  className={`card p-5 transition-all border ${
+                    isExpanded
+                      ? 'border-civic-blue ring-2 ring-civic-blue/20 bg-blue-50/10'
+                      : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+                  }`}
                 >
-                  Close Inspection
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                    <ShieldAlert className="w-4 h-4 text-red-500" />
-                    Observed Evidence In Situ
-                  </h4>
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700 font-mono italic leading-relaxed">
-                    "{selectedFinding.evidence}"
+                  {/* Card Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <SeverityBadge severity={finding.severity} />
+                      <CategoryBadge category={finding.category} />
+                      <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                        ID: {finding.id}
+                      </span>
+                      {finding.detection_type === 'ai_suggested' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                          <Bot className="w-3 h-3" />
+                          AI
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-medium text-slate-500">
+                      Confidence: <strong className="text-slate-800">{Math.round(finding.confidence * 100)}%</strong>
+                    </span>
                   </div>
-                  {selectedFinding.selector && (
-                    <p className="text-[11px] text-slate-500">
-                      DOM Selector: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">{selectedFinding.selector}</code>
-                    </p>
+
+                  {/* Card Title */}
+                  <h3
+                    onClick={(e) => openInspectionModal(finding, e)}
+                    className="text-base font-semibold text-slate-900 cursor-pointer hover:text-civic-blue transition-colors"
+                  >
+                    {finding.title}
+                  </h3>
+
+                  {/* Citizen Impact Summary */}
+                  <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                    <strong className="text-slate-800">Citizen Impact:</strong> {finding.rationale}
+                  </p>
+
+                  {/* Action Bar */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <span className="truncate max-w-sm font-mono text-[11px] text-slate-400">
+                      {finding.page_url}
+                    </span>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Inline Accordion Toggle */}
+                      <button
+                        type="button"
+                        onClick={(e) => toggleExpandCard(finding.id, e)}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
+                        title={isExpanded ? 'Collapse inline details' : 'Quick preview inline'}
+                      >
+                        {isExpanded ? (
+                          <>
+                            <ChevronUp className="w-3.5 h-3.5" />
+                            Hide Preview
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3.5 h-3.5" />
+                            Inline Preview
+                          </>
+                        )}
+                      </button>
+
+                      {/* Pop-up Modal Trigger */}
+                      <button
+                        type="button"
+                        onClick={(e) => openInspectionModal(finding, e)}
+                        className="btn-primary text-xs py-1.5 px-3 shadow-xs inline-flex items-center gap-1.5"
+                        title="Open full inspection pop-up modal"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                        Inspect Evidence & Fix
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Inline Expanded Inspection Section */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-blue-100/80 space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                          <Layers className="w-3.5 h-3.5 text-civic-blue" />
+                          In-Situ Inspection Details
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => openInspectionModal(finding, e)}
+                          className="text-civic-blue hover:underline text-xs font-semibold inline-flex items-center gap-1"
+                        >
+                          Open in Focused Pop-up Modal
+                          <Maximize2 className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        {/* Evidence */}
+                        <div className="bg-red-50/30 p-3 rounded-lg border border-red-200/80 space-y-1.5">
+                          <h4 className="text-[11px] font-bold text-red-900 uppercase tracking-wide flex items-center gap-1">
+                            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                            Observed DOM Evidence
+                          </h4>
+                          <blockquote className="p-2.5 bg-white rounded border border-red-200 text-xs text-slate-700 font-mono italic leading-relaxed">
+                            "{finding.evidence}"
+                          </blockquote>
+                          {finding.selector && (
+                            <p className="text-[11px] text-slate-500 pt-1">
+                              DOM Selector:{' '}
+                              <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono text-[10px] border border-slate-200">
+                                {finding.selector}
+                              </code>
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Fix */}
+                        <div className="bg-emerald-50/30 p-3 rounded-lg border border-emerald-200/80 space-y-1.5">
+                          <h4 className="text-[11px] font-bold text-emerald-900 uppercase tracking-wide flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Prescribed Human Fix
+                          </h4>
+                          <p className="text-xs text-slate-700 leading-relaxed bg-white p-2.5 rounded border border-emerald-200 font-medium">
+                            {finding.fix}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
+              )
+            })}
+          </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    Prescribed Human Fix
-                  </h4>
-                  <p className="text-xs text-slate-700 leading-relaxed bg-emerald-50/60 p-3 rounded-lg border border-emerald-100">
-                    {selectedFinding.fix}
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Detection Type: <span className="font-semibold text-slate-700 capitalize">{selectedFinding.detection_type.replace('_', ' ')}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Interactive Pop-up Modal */}
+          <FindingInspectionModal
+            finding={modalFinding}
+            onClose={() => setModalFinding(null)}
+            currentIndex={modalFinding ? filteredFindings.findIndex(f => f.id === modalFinding.id) : undefined}
+            totalCount={filteredFindings.length}
+            onPrev={
+              modalFinding && filteredFindings.findIndex(f => f.id === modalFinding.id) > 0
+                ? () => {
+                    const idx = filteredFindings.findIndex(f => f.id === modalFinding.id)
+                    setModalFinding(filteredFindings[idx - 1])
+                  }
+                : undefined
+            }
+            onNext={
+              modalFinding && filteredFindings.findIndex(f => f.id === modalFinding.id) < filteredFindings.length - 1
+                ? () => {
+                    const idx = filteredFindings.findIndex(f => f.id === modalFinding.id)
+                    setModalFinding(filteredFindings[idx + 1])
+                  }
+                : undefined
+            }
+          />
         </div>
       )}
 

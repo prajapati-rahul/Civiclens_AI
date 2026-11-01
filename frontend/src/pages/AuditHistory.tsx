@@ -108,6 +108,15 @@ export default function AuditHistory() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={fetchAudits}
+            className="btn-secondary text-xs px-3 py-2"
+            title="Refresh history list"
+            aria-label="Refresh history"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           {audits.length > 0 && (
             <button
               onClick={() => setConfirmClearOpen(true)}

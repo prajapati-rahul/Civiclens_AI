@@ -120,13 +120,15 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/demo"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-lg transition-colors border border-violet-200"
-            >
-              <FlaskConical className="w-3.5 h-3.5" />
-              View Demo
-            </Link>
+            {location.pathname !== '/demo' && (
+              <Link
+                to="/demo"
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-lg transition-colors border border-violet-200"
+              >
+                <FlaskConical className="w-3.5 h-3.5" />
+                View Demo
+              </Link>
+            )}
             <Link
               to="/audit/new"
               className="btn-primary text-sm py-1.5 px-3"

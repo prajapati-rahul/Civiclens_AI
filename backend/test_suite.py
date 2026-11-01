@@ -19,6 +19,7 @@ backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
 
 from main import app
+from services.ai_analyzer import _extract_json_array, analyze_with_ai
 from services.ssrf_guard import validate_url
 from services.audit_engine import (
     check_empty_link_text,
@@ -160,9 +161,10 @@ def test_scoring_algorithm():
 
 async def test_database_lifecycle():
     await init_db()
-    await clear_all_audits()
 
-    test_id = "test-live-001"
+    test_id = "test-live-isolated-001"
+    # Ensure test-id does not exist prior to test
+    await delete_audit(test_id)
     await create_audit_record(
         audit_id=test_id,
         url="https://civic.example.gov",
@@ -200,6 +202,35 @@ async def test_database_lifecycle():
 
     print("[PASS] Database CRUD Lifecycle PASSED")
 
+def test_ai_analyzer_json_parsing():
+    sample_finding = {
+        "title": "Unclear button label",
+        "category": "navigation",
+        "severity": "high",
+        "page_url": "https://example.gov",
+        "evidence": "Found button with text 'Submit 1'",
+        "rationale": "Confuses citizens on action",
+        "fix": "Use descriptive action verbs",
+        "confidence": 0.9,
+        "detection_type": "ai_suggested",
+    }
+    raw_fenced = f"```json\n[{json.dumps(sample_finding)}]\n```"
+    parsed_fenced = _extract_json_array(raw_fenced)
+    assert parsed_fenced is not None and len(parsed_fenced) == 1
+    assert parsed_fenced[0]["title"] == "Unclear button label"
+
+    # Conversational text before array
+    raw_mixed = f"Here are the findings based on my review:\n[{json.dumps(sample_finding)}]\nHope this helps!"
+    parsed_mixed = _extract_json_array(raw_mixed)
+    assert parsed_mixed is not None and len(parsed_mixed) == 1
+
+    # Malformed item missing required key
+    invalid_item = [{"title": "Missing other fields"}]
+    parsed_invalid = _extract_json_array(json.dumps(invalid_item))
+    assert parsed_invalid == []
+
+    print("[PASS] AI Analyzer Multi-Provider JSON Parser PASSED (fenced, mixed, & validation)")
+
 def run_all_tests():
     print("\n--- Running CivicLens AI Backend Test Suite ---")
     test_health()
@@ -207,6 +238,7 @@ def run_all_tests():
     test_ssrf_guard()
     test_deterministic_checks()
     test_scoring_algorithm()
+    test_ai_analyzer_json_parsing()
     asyncio.run(test_database_lifecycle())
     print("\n==============================================")
     print("ALL TESTS PASSED SUCCESSFULLY! (100% Verified)")

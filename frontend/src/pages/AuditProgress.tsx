@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { ShieldAlert, ArrowRight, Sparkles } from 'lucide-react'
 import {
   CheckCircle2,
   XCircle,
@@ -19,6 +20,30 @@ type Stage = {
   label: string
   icon: React.ElementType
 }
+
+
+const VERIFIED_GOV_SITES = [
+  {
+    name: 'UP Scholarship Portal',
+    url: 'https://scholarship.up.gov.in/',
+    task: 'Apply for Postmatric Scholarship scheme as a student',
+  },
+  {
+    name: 'Digital India',
+    url: 'https://digitalindia.gov.in/',
+    task: 'Discover digital citizen services and public infrastructure initiatives',
+  },
+  {
+    name: 'UIDAI (Aadhaar)',
+    url: 'https://uidai.gov.in/',
+    task: 'Update demographic address and download e-Aadhaar card',
+  },
+  {
+    name: 'USA.gov',
+    url: 'https://www.usa.gov/',
+    task: 'Apply for federal government assistance and food benefits',
+  },
+]
 
 const STAGES: Stage[] = [
   { key: 'validating', label: 'Validating URL', icon: Globe },
@@ -65,7 +90,7 @@ export default function AuditProgress() {
           setTimeout(() => navigate(`/audit/${id}/results`), 800)
         } else if (data.status === 'failed') {
           clearInterval(intervalRef.current!)
-          setError(data.message ?? 'The audit failed. The site may be unreachable or returned an error.')
+          setError(data.error_message ?? data.message ?? 'The audit failed. The site may be unreachable or returned an error.')
         }
       } catch {
         setError('Lost connection to the backend. Is it still running?')
@@ -100,11 +125,48 @@ export default function AuditProgress() {
         </div>
 
         {error ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <ErrorAlert title="Audit Failed" message={error} />
-            <div className="flex flex-col sm:flex-row gap-3">
+
+            {/* Explanatory context for bot protection / timeouts */}
+            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4 text-left">
+              <div className="flex items-start gap-2.5">
+                <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-900">Why do some portals block automated audits?</h4>
+                  <p className="text-xs text-amber-800/90 mt-1 leading-relaxed">
+                    High-frequency ticketing and banking systems (such as IRCTC or payment gateways) deploy strict anti-bot firewalls (Akamai Bot Manager, Radware) to prevent ticket scalping. CivicLens AI follows security boundaries and never bypasses anti-bot controls.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* One-click suggestions */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/80 text-left">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2.5">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                Try one of these verified public citizen services (100% accessible for audits):
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {VERIFIED_GOV_SITES.map((site) => (
+                  <Link
+                    key={site.name}
+                    to={`/audit/new?url=${encodeURIComponent(site.url)}&task=${encodeURIComponent(site.task)}`}
+                    className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:bg-blue-50/40 text-slate-800 text-xs transition-all group"
+                  >
+                    <div>
+                      <div className="font-medium text-slate-900 group-hover:text-blue-700">{site.name}</div>
+                      <div className="text-[11px] text-slate-400 truncate max-w-[200px]">{site.url}</div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <Link to="/audit/new" className="btn-primary flex-1 justify-center text-sm">
-                Try Again
+                Try Different URL
               </Link>
               <Link to="/demo" className="btn-secondary flex-1 justify-center text-sm">
                 <FlaskConical className="w-4 h-4" />

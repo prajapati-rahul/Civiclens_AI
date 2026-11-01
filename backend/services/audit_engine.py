@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -41,10 +42,27 @@ TIMEOUT: int = int(os.getenv("AUDIT_TIMEOUT_SECONDS", "120"))
 MAX_RESPONSE_BYTES: int = 5 * 1024 * 1024  # 5 MB
 
 _HTTPX_HEADERS = {
-    "User-Agent": "CivicLens-Audit/1.0 (public-site-accessibility-checker)",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36 CivicLens-Audit/1.0"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
 }
+
+def _create_ssl_context() -> ssl.SSLContext:
+    """
+    Create an SSL context supporting legacy server renegotiation.
+    Many government websites (e.g. *.gov.in, *.nic.in, state portals, municipal servers)
+    use legacy TLS ciphers that OpenSSL 3.0+ rejects by default unless
+    OP_LEGACY_SERVER_CONNECT is explicitly enabled.
+    """
+    ctx = ssl.create_default_context()
+    ctx.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
 
 # Severity → numeric weight for scoring
 _SEVERITY_WEIGHT: Dict[str, int] = {
@@ -60,46 +78,53 @@ _SEVERITY_WEIGHT: Dict[str, int] = {
 # Page fetcher
 # ---------------------------------------------------------------------------
 
-async def _fetch_page(client: httpx.AsyncClient, url: str) -> Optional[Dict[str, Any]]:
+async def _fetch_page(client: httpx.AsyncClient, url: str) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
     """
     Fetch a single page. Validates each redirect URL through the SSRF guard.
-    Returns dict with 'url', 'html', 'text' or None on failure.
+    Returns (dict, error_message).
     """
     try:
         response = await client.get(url, follow_redirects=True)
+
+        if response.status_code >= 400:
+            msg = f"HTTP {response.status_code} {response.reason_phrase}"
+            print(f"[audit_engine] HTTP error {msg} for {url}", file=sys.stderr)
+            return None, msg
 
         # Check final URL after redirects
         final_url = str(response.url)
         if final_url != url:
             safe, reason = validate_url(final_url)
             if not safe:
-                print(
-                    f"[audit_engine] Redirect to unsafe URL blocked: {reason}",
-                    file=sys.stderr,
-                )
-                return None
+                msg = f"Redirect to unsafe URL blocked: {reason}"
+                print(f"[audit_engine] {msg}", file=sys.stderr)
+                return None, msg
 
         # Limit response size
         content_length = int(response.headers.get("content-length", 0))
         if content_length > MAX_RESPONSE_BYTES:
-            print(
-                f"[audit_engine] Page {url} too large ({content_length} bytes), skipping.",
-                file=sys.stderr,
-            )
-            return None
+            msg = f"Page too large ({content_length} bytes, limit is {MAX_RESPONSE_BYTES})"
+            print(f"[audit_engine] {msg}", file=sys.stderr)
+            return None, msg
 
         html = response.text[:MAX_RESPONSE_BYTES]
         soup = BeautifulSoup(html, "lxml")
         text = soup.get_text(separator=" ", strip=True)
 
-        return {"url": final_url, "html": html, "text": text, "soup": soup}
+        return {"url": final_url, "html": html, "text": text, "soup": soup}, None
 
     except httpx.TimeoutException:
-        print(f"[audit_engine] Timeout fetching {url}", file=sys.stderr)
-        return None
+        url_lower = url.lower()
+        if any(b in url_lower for b in ("irctc.co.in", "tatkal", "railway")):
+            msg = "Request timed out: This portal (IRCTC) enforces an aggressive anti-bot firewall (Akamai Bot Manager) that rejects automated web inspection tools. Please try standard public portals like scholarship.up.gov.in, digitalindia.gov.in, or uidai.gov.in."
+        else:
+            msg = "Request timed out after 15s: Server took too long to respond or has an active bot-protection firewall blocking automated inspection tools."
+        print(f"[audit_engine] {msg} for {url}", file=sys.stderr)
+        return None, msg
     except Exception as exc:
+        msg = f"Connection error: {exc}"
         print(f"[audit_engine] Error fetching {url}: {exc}", file=sys.stderr)
-        return None
+        return None, msg
 
 
 def _discover_internal_links(soup: BeautifulSoup, base_url: str) -> List[str]:
@@ -635,15 +660,17 @@ async def run_audit(
     all_findings: List[Dict[str, Any]] = []
     checks_run = 0
 
+    ssl_context = _create_ssl_context()
     async with httpx.AsyncClient(
         headers=_HTTPX_HEADERS,
-        timeout=httpx.Timeout(30.0),
+        verify=ssl_context,
+        timeout=httpx.Timeout(15.0, connect=10.0),
         max_redirects=5,
     ) as client:
         # 2. Fetch root page
-        root_data = await _fetch_page(client, url)
+        root_data, fetch_err = await _fetch_page(client, url)
         if root_data is None:
-            err = f"Failed to fetch root page: {url}"
+            err = f"Failed to fetch {url}: {fetch_err or 'Server unreachable'}"
             completed_at = datetime.now(timezone.utc).isoformat()
             await save_audit_result(
                 audit_id, "failed", completed_at, json.dumps({}), error_message=err
@@ -660,7 +687,7 @@ async def run_audit(
                 safe_link, _ = validate_url(link)
                 if not safe_link:
                     continue
-                page_data = await _fetch_page(client, link)
+                page_data, _ = await _fetch_page(client, link)
                 if page_data:
                     pages_data.append(page_data)
 

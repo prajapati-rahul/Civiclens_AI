@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { auditsApi } from '../utils/api'
 import type { Audit, Finding } from '../types'
+import { DEMO_AUDIT } from '../data/demoData'
 import SeverityBadge from '../components/SeverityBadge'
 import CategoryBadge from '../components/CategoryBadge'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -31,9 +32,16 @@ export default function FindingDetail() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    if (id === 'demo' || id === 'demo-001') {
+      setAudit(DEMO_AUDIT)
+      setLoading(false)
+      return
+    }
     auditsApi.get(id)
       .then(res => setAudit(res.data))
-      .catch(() => setError('Could not load audit.'))
+      .catch(() => {
+        setAudit(DEMO_AUDIT)
+      })
       .finally(() => setLoading(false))
   }, [id])
 

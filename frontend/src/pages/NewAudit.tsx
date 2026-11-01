@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import {
   Globe,
   User,
@@ -20,6 +21,34 @@ const scopes: { value: AuditScope; label: string; desc: string }[] = [
   { value: 'homepage', label: 'Homepage only', desc: 'Audits just the main landing page. Fast and focused.' },
   { value: 'full_site', label: 'Top-level pages', desc: 'Audits the homepage + up to 5 linked sub-pages.' },
   { value: 'specific_path', label: 'Specific path', desc: 'Audits a specific URL path you provide.' },
+]
+
+
+const SAMPLE_AUDITS = [
+  {
+    name: 'UP Scholarship Portal',
+    url: 'https://scholarship.up.gov.in/',
+    task: 'Apply for Postmatric Scholarship scheme as a student',
+    badge: 'State Gov (India)',
+  },
+  {
+    name: 'Digital India',
+    url: 'https://digitalindia.gov.in/',
+    task: 'Discover digital citizen services and public infrastructure initiatives',
+    badge: 'National Portal',
+  },
+  {
+    name: 'UIDAI (Aadhaar)',
+    url: 'https://uidai.gov.in/',
+    task: 'Update demographic address and download e-Aadhaar card',
+    badge: 'Identity Service',
+  },
+  {
+    name: 'USA.gov',
+    url: 'https://www.usa.gov/',
+    task: 'Apply for federal government assistance and food benefits',
+    badge: 'Federal Portal (US)',
+  },
 ]
 
 const checks = [
@@ -46,9 +75,13 @@ function isValidHttpsUrl(url: string): boolean {
 
 export default function NewAudit() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialUrl = searchParams.get('url') || ''
+  const initialTask = searchParams.get('task') || ''
+
   const [form, setForm] = useState({
-    url: '',
-    task: '',
+    url: initialUrl,
+    task: initialTask,
     scope: 'homepage' as AuditScope,
     description: '',
   })
@@ -107,6 +140,30 @@ export default function NewAudit() {
           <form onSubmit={handleSubmit} className="card p-6 space-y-6">
             {apiError && <ErrorAlert message={apiError} onRetry={() => setApiError(null)} />}
 
+            {/* Quick Presets */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                Quick-load verified public government portal:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {SAMPLE_AUDITS.map(sample => (
+                  <button
+                    key={sample.name}
+                    type="button"
+                    onClick={() => {
+                      setForm(f => ({ ...f, url: sample.url, task: sample.task }))
+                      setErrors({})
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-white border border-slate-200 text-slate-700 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50/50 transition-colors shadow-2xs"
+                  >
+                    <span>{sample.name}</span>
+                    <span className="text-[10px] text-slate-400 bg-slate-100 px-1 py-0.5 rounded">{sample.badge}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* URL */}
             <div>
               <label htmlFor="url" className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -129,10 +186,15 @@ export default function NewAudit() {
                   <AlertTriangle className="w-3 h-3" /> {errors.url}
                 </p>
               ) : (
-                <p id="url-hint" className="mt-1.5 text-xs text-slate-500 flex items-center gap-1">
-                  <Shield className="w-3 h-3 text-slate-400" />
-                  Only public government/civic websites. SSRF protections are enforced server-side.
-                </p>
+                <div id="url-hint" className="mt-1.5 space-y-1 text-xs text-slate-500">
+                  <p className="flex items-center gap-1">
+                    <Shield className="w-3 h-3 text-slate-400" />
+                    Only public government/civic websites. SSRF protections are enforced server-side.
+                  </p>
+                  <p className="text-[11px] text-slate-400 pl-4">
+                    Note: Portals with anti-bot firewalls (e.g. IRCTC, banking) reject automated inspection. Public state/federal citizen portals audit seamlessly.
+                  </p>
+                </div>
               )}
             </div>
 

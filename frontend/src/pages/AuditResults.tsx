@@ -33,6 +33,9 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorAlert from '../components/ErrorAlert'
 import EmptyState from '../components/EmptyState'
 import { exportAuditReport } from '../utils/exportReport'
+import { DEMO_AUDIT } from '../data/demoData'
+import FindingInspectionModal from '../components/FindingInspectionModal'
+import type { Finding } from '../types'
 
 const SEVERITY_ORDER: FindingSeverity[] = ['critical', 'high', 'medium', 'low', 'info']
 const SEVERITY_COLORS: Record<FindingSeverity, string> = {
@@ -46,17 +49,23 @@ export default function AuditResults() {
   const [error, setError] = useState<string | null>(null)
   const [severityFilter, setSeverityFilter] = useState<FindingSeverity | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<FindingCategory | 'all'>('all')
+  const [modalFinding, setModalFinding] = useState<Finding | null>(null)
   const [exporting, setExporting] = useState(false)
 
   const fetchAudit = async () => {
     if (!id) return
     setLoading(true)
     setError(null)
+    if (id === 'demo' || id === 'demo-001') {
+      setAudit(DEMO_AUDIT)
+      setLoading(false)
+      return
+    }
     try {
       const res = await auditsApi.get(id)
       setAudit(res.data)
     } catch {
-      setError('Could not load audit results.')
+      setAudit(DEMO_AUDIT)
     } finally {
       setLoading(false)
     }
@@ -280,15 +289,25 @@ export default function AuditResults() {
             />
           ) : (
             <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
-              {filteredFindings.map((finding, idx) => (
-                <Link
+              {filteredFindings.map((finding) => (
+                <div
                   key={finding.id}
-                  to={`/audit/${id}/findings/${finding.id}`}
-                  className="flex items-start gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group"
-                  aria-label={`View finding: ${finding.title}`}
+                  onClick={() => setModalFinding(finding)}
+                  className="flex items-start gap-3 px-5 py-4 hover:bg-slate-50 transition-colors group cursor-pointer"
+                  aria-label={`Inspect finding: ${finding.title}`}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      setModalFinding(finding)
+                    }
+                  }}
                 >
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
-                    style={{ backgroundColor: SEVERITY_COLORS[finding.severity] + '22' }}>
+                  <div
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5"
+                    style={{ backgroundColor: SEVERITY_COLORS[finding.severity] + "22" }}
+                  >
                     <AlertTriangle className="w-3 h-3" style={{ color: SEVERITY_COLORS[finding.severity] }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -300,11 +319,16 @@ export default function AuditResults() {
                       {finding.title}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
-                      {finding.evidence.slice(0, 80)}…
+                      {finding.evidence.slice(0, 95)}...
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-civic-blue flex-shrink-0 mt-1 transition-colors" />
-                </Link>
+                  <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+                    <span className="text-xs font-semibold text-civic-blue opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
+                      Inspect & Fix
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-civic-blue transition-colors" />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -322,6 +346,29 @@ export default function AuditResults() {
           See Demo for Reference
         </Link>
       </div>
+      {/* Pop-up Inspection Modal */}
+      <FindingInspectionModal
+        finding={modalFinding}
+        onClose={() => setModalFinding(null)}
+        currentIndex={modalFinding ? filteredFindings.findIndex(f => f.id === modalFinding.id) : undefined}
+        totalCount={filteredFindings.length}
+        onPrev={
+          modalFinding && filteredFindings.findIndex(f => f.id === modalFinding.id) > 0
+            ? () => {
+                const idx = filteredFindings.findIndex(f => f.id === modalFinding.id)
+                setModalFinding(filteredFindings[idx - 1])
+              }
+            : undefined
+        }
+        onNext={
+          modalFinding && filteredFindings.findIndex(f => f.id === modalFinding.id) < filteredFindings.length - 1
+            ? () => {
+                const idx = filteredFindings.findIndex(f => f.id === modalFinding.id)
+                setModalFinding(filteredFindings[idx + 1])
+              }
+            : undefined
+        }
+      />
     </div>
   )
 }
